@@ -1,5 +1,6 @@
 #![cfg_attr(all(feature="serde_type"), feature(proc_macro))]
 
+extern crate chrono;
 #[macro_use]
 extern crate iron;
 #[macro_use]
@@ -15,6 +16,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate maplit;
 
+use std::cmp::Ordering;
 use std::fs;
 use std::fs::File;
 use std::io::BufReader;
@@ -42,6 +44,8 @@ use hbs::Watchable;
 use std::sync::Arc;
 use serde_json::value::{Value, Map};
 use serde_json::Error;
+use chrono::prelude::*;
+
 
 struct Login {
     username: String
@@ -65,10 +69,29 @@ pub struct Post {
     link: String,
     text: String,
     tags: Vec<String>,
-    date: String,
+    date: DateTime<UTC>,
     lat: f32,
     lng: f32,
 }
+
+impl Ord for Post {
+    fn cmp(&self, other: &Post) -> Ordering {
+        self.date.cmp(&other.date)
+    }
+}
+
+impl PartialOrd for Post {
+    fn partial_cmp(&self, other: &Post) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Post {
+    fn eq(&self, other: &Post) -> bool {
+        self.link == other.link
+    }
+}
+impl Eq for Post {}
 
 fn get_post(id: &str) -> Value {
     let mut file = File::open(format!("./resources/posts/{}.json", id));
@@ -91,6 +114,7 @@ fn get_posts() -> Map<String, Value> {
         let p: Post = serde_json::from_str(contents.as_str()).unwrap();
         posts.push(p);
     }
+    posts.sort();
     data.insert(String::from("posts"), to_json(&posts));
     data
 }
