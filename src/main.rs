@@ -115,6 +115,7 @@ fn get_posts() -> Map<String, Value> {
         posts.push(p);
     }
     posts.sort();
+    posts.reverse();
     data.insert(String::from("posts"), to_json(&posts));
     data
 }

@@ -19,7 +19,7 @@ function send_post() {
         "title": document.getElementById('title').value,
         "link": document.getElementById('url').value,
         "text": simplemde.value(),
-        "tags": ["Africa"],
+        "tags": document.getElementById('tags').value.split(','),
         "date": new Date(),
         "lat": position.coords.latitude,
         "lng": position.coords.longitude,
