@@ -54,7 +54,7 @@ impl iron_sessionstorage::Value for Login {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
     title: String,
     link: String,
@@ -203,13 +203,11 @@ fn post_create(req: &mut Request) -> IronResult<Response> {
     let query = req.extensions.get::<Router>().unwrap().find("post_id").unwrap_or("/");
     let mut s = String::from("");
     let x = req.body.read_to_string(&mut s);
-
-    println!("{}", s);
-
+    let post: Post = serde_json::from_str(s.as_str()).unwrap();
     Ok(Response::with((
         status::Ok,
         "text/json".parse::<iron::mime::Mime>().unwrap(),
-        "{status: ok}")))
+        "{\"status\": \"ok\"}")))
 }
 
 fn main() {
@@ -230,6 +228,7 @@ fn main() {
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("./resources/templates/", ".hbs")));
 
+    // TODO remove these, replace with reload
     let hbse_ref = Arc::new(hbse);
     hbse_ref.watch("./resources/templates/");
 

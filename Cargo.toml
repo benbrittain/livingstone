@@ -1,0 +1,22 @@
+[package]
+name = "livingstone"
+version = "0.1.0"
+authors = ["Ben Brittain <ben@brittain.org>"]
+
+[dependencies]
+router = "*"
+iron = "*"
+iron-sessionstorage = "*"
+urlencoded = "*"
+serde_json = "0.9.10"
+serde_derive = "0.9.14"
+serde = "0.9.14"
+maplit = "*"
+
+[dependencies.handlebars-iron]
+version = "*"
+features = ["serde_type"]
+
+[features]
+## create a feature in your app
+watch = ["handlebars-iron/watch"]
