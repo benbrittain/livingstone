@@ -1,0 +1,68 @@
+{{> header}}
+<head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+<script>
+function send_post() {
+  function sendData(position) {
+    xhr = new XMLHttpRequest();
+    var url = "/post";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var json = JSON.parse(xhr.responseText);
+            console.log(json.email + ", " + json.password)
+        }
+    }
+    var data = JSON.stringify({
+        "title": document.getElementById('title').value,
+        "link": document.getElementById('url').value,
+        "text": simplemde.value(),
+        "tags": ["Africa"],
+        "date": new Date(),
+        "lat": position.coords.latitude,
+        "lng": position.coords.longitude,
+    });
+    xhr.send(data);
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(sendData);
+  }
+}
+</script>
+
+
+</head>
+
+<div class="container is-fluid ">
+  <div class="field">
+    <label class="label">Post title</label>
+    <p class="control">
+      <input id ="title" class="input" type="text" placeholder="Across Africa">
+    </p>
+  </div>
+  <textarea id="MyID"></textarea>
+  <script>
+  var simplemde = new SimpleMDE({ element: document.getElementById("MyID") });
+  </script>
+  <div class="field">
+    <label class="label">tags</label>
+    <p class="control">
+      <input id ="tags" class="input" type="text" placeholder="Africa, tag">
+    </p>
+  </div>
+  <div class="field">
+    <label class="label">Post url</label>
+    <p class="control">
+      <input id ="url" class="input" type="text" placeholder="across_africa">
+    </p>
+  </div>
+
+  <div class="block">
+    <a onclick="send_post()" class="button">Submit</a>
+  </div>
+</div>
+
+{{> footer}}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Africa</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.0/css/bulma.min.css">
+    <!--     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script> -->
+     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+     <script src='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.js'></script>
+     <link href='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.css' rel='stylesheet' />
+  </head>
+  <body>
+    <script>
+      L.mapbox.accessToken = 'pk.eyJ1IjoiYmJyaXR0YWluIiwiYSI6ImhpbUsyRlkifQ.5ZE_CVqkUs7PztBMxYIQvg';
+    </script>
+      <section class="hero is-bold">
+        <div class="hero-head">
+          <header class="nav">
+            <div class="container">
+              <div class="nav-left">
+                <a href="/" class="nav-item">
+                      <h1 class="title">
+                        Travels
+                      </h1>
+                </a>
+              </div>
+              <div class="nav-right">
+                <a href="/" class="nav-item">
+                  Home
+                </a>
+                {{#if loggedin}}
+                  <a href="/editor" class="nav-item">
+                    Make Post
+                  </a>
+                {{/if}}
+                <a href="/the-map" class="nav-item">
+                  The Map
+                </a>
+                <a href="/about" class="nav-item">
+                  About
+                </a>
+              </div>
+            </div>
+          </header>
+        </div>
+    </section>
+    <br/>

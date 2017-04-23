@@ -1,0 +1,58 @@
+{{> header }}
+
+    <div class="container is-fluid ">
+    {{#each posts}}
+
+    <div class="tile is-ancestor">
+  <div class="tile is-2 is-vertical is-parent is-hidden-mobile">
+    <div class="tile is-paddingless is-pulled-left image is-square is-child box" id="mapid{{@index}}"></div>
+  </div>
+  <div href="" class="tile is-parent">
+    <div class="tile card is-child box">
+      <h1 class="title">
+        <a href="/post/{{link}}">
+          {{title}}
+        </a>
+      </h1>
+      <div class="content">
+        <p> {{snippet}}... </p>
+      </div>
+      {{#each tags}}
+      <span class="tag is-unselectable">
+        {{this}}
+      </span>
+      {{/each}}
+    </div>
+  </div>
+</div>
+         <script>
+          var map{{@index}} = L.map('mapid{{@index}}', {
+            attributionControl: false,
+            zoomControl: false,
+            dragging: false,
+          }).setView([{{lat}}, {{lng}}], 7);
+          L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiYmJyaXR0YWluIiwiYSI6ImNqMXR1ZjN4YjAwMXUzM3AweWRsb2pwOHMifQ.3LYbdpsBdUUzjw_7e_rWvQ', {
+            maxZoom: 13,
+            attribution: "",
+            id: 'mapbox.satellite',
+        }).addTo(map{{@index}});
+        map{{@index}}.attributionControl = false;
+map{{@index}}.doubleClickZoom.disable();
+            </script>
+    {{/each}}
+
+    <nav class="pagination is-centered">
+  <a class="pagination-previous">Previous</a>
+  <a class="pagination-next">Next page</a>
+  <ul class="pagination-list">
+    <li><a class="pagination-link">1</a></li>
+    <li><span class="pagination-ellipsis">&hellip;</span></li>
+    <li><a class="pagination-link">45</a></li>
+    <li><a class="pagination-link is-current">46</a></li>
+    <li><a class="pagination-link">47</a></li>
+    <li><span class="pagination-ellipsis">&hellip;</span></li>
+    <li><a class="pagination-link">86</a></li>
+  </ul>
+</nav>
+
+{{> footer}}
