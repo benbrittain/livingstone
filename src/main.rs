@@ -228,16 +228,20 @@ fn main() {
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("./resources/templates/", ".hbs")));
 
-    // TODO remove these, replace with reload
-    let hbse_ref = Arc::new(hbse);
-    hbse_ref.watch("./resources/templates/");
+    #[cfg(feature = "watch")]
+    {
+        let hbse_ref = Arc::new(hbse);
+        hbse_ref.watch("./resources/templates/");
+        ch.link_after(hbse_ref);
+    }
 
-    ch.link_after(hbse_ref);
-
-    //if let Err(r) = hbse.reload() {
-    //    panic!("{}", r);
-    //}
-    //ch.link_after(hbse);
+    #[cfg(not(feature = "watch"))]
+    {
+        if let Err(r) = hbse.reload() {
+            panic!("{}", r);
+        }
+        ch.link_after(hbse);
+    }
 
     let _res = Iron::new(ch).http("localhost:8080");
     println!("Listening on 8080.");
