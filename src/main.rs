@@ -15,6 +15,11 @@ extern crate serde_json;
 #[macro_use]
 extern crate maplit;
 
+use std::fs;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
+
 use iron::prelude::*;
 use iron::status;
 use iron::modifiers::Redirect;
@@ -66,42 +71,26 @@ pub struct Post {
 }
 
 fn get_post(id: &str) -> Value {
-    to_json(&Post {
-        title: String::from(id),
-        link: String::from("africa"),
-        text: String::from("africa\n
-        eunsaotehu"),
-        date: String::from("10/3/2017"),
-        tags: vec![String::from("Nigeria"), String::from("Africa Trip")],
-        lat: -23.9,
-        lng: 28.7,
-    })
+    let mut file = File::open(format!("./resources/posts/{}.json", id));
+    let mut buf_reader = BufReader::new(file.unwrap());
+    let mut contents = String::new();
+    buf_reader.read_to_string(&mut contents).unwrap();
+    let p: Post = serde_json::from_str(contents.as_str()).unwrap();
+    to_json(&p)
 }
-
 
 fn get_posts() -> Map<String, Value> {
     let mut data = Map::new();
-
-    let posts= vec![Post {
-        title: String::from("Toto - Africa"),
-        text: String::from("africa\n
-        eunsaotehu"),
-        date: String::from("10/3/2017"),
-        tags: vec![String::from("Nigeria"), String::from("Africa Trip")],
-        link: String::from("africa"),
-        lat: -23.9,
-        lng: 28.7,
-    },
-    Post{
-        title: String::from("Let's hear it for Africa"),
-        text: String::from("africa\n
-        eunsaotehu"),
-        date: String::from("10/3/2017"),
-        tags: vec![String::from("Nigeria"), String::from("Africa Trip")],
-        link: String::from("blah"),
-        lat: -21.9,
-        lng: 26.7,
-    }];
+    let paths = fs::read_dir("./resources/posts/").unwrap();
+    let mut posts = Vec::new();
+    for path in paths {
+        let mut file = File::open(path.unwrap().path()).unwrap();
+        let mut buf_reader = BufReader::new(file);
+        let mut contents = String::new();
+        buf_reader.read_to_string(&mut contents).unwrap();
+        let p: Post = serde_json::from_str(contents.as_str()).unwrap();
+        posts.push(p);
+    }
     data.insert(String::from("posts"), to_json(&posts));
     data
 }
@@ -122,7 +111,6 @@ fn check_login(username: &str, password: &str) -> bool{
 
 fn login(req: &mut Request) -> IronResult<Response> {
     if try!(req.session().get::<Login>()).is_some() {
-        // Already logged in
         return Ok(Response::with((status::Found, Redirect(url_for!(req, "home")))));
     }
 
@@ -191,8 +179,6 @@ fn home(req: &mut Request) -> IronResult<Response> {
 
 fn post_handler(req: &mut Request) -> IronResult<Response> {
     let query = req.extensions.get::<Router>().unwrap().find("post_id").unwrap_or("/");
-    println!("{}", query);
-
     let mut data = get_post(query);
     let mut resp = Response::new();
     resp.set_mut(Template::new("post", data)).set_mut(status::Ok);
@@ -204,6 +190,8 @@ fn post_create(req: &mut Request) -> IronResult<Response> {
     let mut s = String::from("");
     let x = req.body.read_to_string(&mut s);
     let post: Post = serde_json::from_str(s.as_str()).unwrap();
+    let mut f = File::create(format!("./resources/posts/{}.json", post.link)).unwrap();
+    f.write(serde_json::to_string(&post).unwrap().as_bytes());
     Ok(Response::with((
         status::Ok,
         "text/json".parse::<iron::mime::Mime>().unwrap(),
