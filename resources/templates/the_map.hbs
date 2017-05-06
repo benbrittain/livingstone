@@ -1,0 +1,16 @@
+{{> header }}
+    <div class="container is-fluid">
+      <section class="hero is-success is-fullheight">
+        <div id="mapid" class="hero-body"> </div>
+      </section>
+    </div>
+    <script>
+      var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+      L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiYmJyaXR0YWluIiwiYSI6ImNqMXR1ZjN4YjAwMXUzM3AweWRsb2pwOHMifQ.3LYbdpsBdUUzjw_7e_rWvQ', {
+                maxZoom: 13,
+                attribution: "",
+                id: 'mapbox.satellite',
+      }).addTo(mymap);
+      mymap.attributionControl = true;
+    </script>
+{{> footer}}

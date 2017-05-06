@@ -1,5 +1,6 @@
 #![cfg_attr(all(feature="serde_type"), feature(proc_macro))]
 
+extern crate xml;
 extern crate chrono;
 #[macro_use]
 extern crate iron;
@@ -41,11 +42,18 @@ use hbs::handlebars::to_json;
 #[cfg(feature = "watch")]
 use hbs::Watchable;
 
-use std::sync::Arc;
 use serde_json::value::{Value, Map};
 use serde_json::Error;
 use chrono::prelude::*;
 
+use std::sync::Arc;
+use std::sync::RwLock;
+use std::sync::mpsc::channel;
+use std::thread;
+
+mod ftp;
+mod gpx;
+mod quadtree;
 
 struct Login {
     username: String
@@ -111,7 +119,12 @@ fn get_posts() -> Map<String, Value> {
         let mut buf_reader = BufReader::new(file);
         let mut contents = String::new();
         buf_reader.read_to_string(&mut contents).unwrap();
-        let p: Post = serde_json::from_str(contents.as_str()).unwrap();
+        let mut p: Post = serde_json::from_str(contents.as_str()).unwrap();
+        p.text = p.text.split_whitespace() // Turn the text into a snippet of less than 80 words
+                       .map(|s| s.to_string())
+                       .take(80)
+                       .collect::<Vec<String>>()
+                       .join(" ");
         posts.push(p);
     }
     posts.sort();
@@ -199,7 +212,34 @@ fn home(req: &mut Request) -> IronResult<Response> {
     }
     resp.set_mut(Template::new("home", data)).set_mut(status::Ok);
     Ok(resp)
+}
 
+fn the_map(req: &mut Request) -> IronResult<Response> {
+    let mut data = get_posts();
+    let mut resp = Response::new();
+    if try!(req.session().get::<Login>()).is_some() {
+        data.insert(String::from("loggedin"), to_json(&true));
+    }
+    resp.set_mut(Template::new("the_map", data)).set_mut(status::Ok);
+    Ok(resp)
+}
+
+fn points_handler(req: &mut Request) -> IronResult<Response> {
+    let mut data = get_posts();
+    let mut resp = Response::new();
+    let router = req.extensions.get::<Router>().unwrap();
+    let lat = router.find("lat").unwrap_or("0");
+    let lng = router.find("lng").unwrap_or("0");
+    let rad = router.find("radius").unwrap_or("0");
+
+    Ok(Response::with((
+        status::Ok,
+        "text/json".parse::<iron::mime::Mime>().unwrap(),
+        format!("{}", lat)
+        )))
+
+    //resp.set_mut(Template::new("the_map", data)).set_mut(status::Ok);
+    //Ok(resp)
 }
 
 fn post_handler(req: &mut Request) -> IronResult<Response> {
@@ -224,10 +264,29 @@ fn post_create(req: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
+
+    let mut tree_lock = RwLock::new(quadtree::QuadTree::load(String::from("tree.json")));
+//    let map_tree = Quadtree::load("tree.json");
+
+    let (tx, rx) = channel();
+    thread::spawn(move || {
+        ftp::start_ftpserver(tx)
+    });
+    thread::spawn(move || {
+        loop {
+            let gps_file = rx.recv().unwrap();
+            for point in gpx::parse(gps_file) {
+                let mut map_tree = tree_lock.write().unwrap();
+                map_tree.insert(point);
+            }
+        }
+    });
+
     let router = router!{
         home: get "/" => home,
         post: get "/post/:post_id" => post_handler,
-        map: get "/the-map" => home,
+        map: get "/the-map" => the_map,
+        points: get "/points/:lat/:lng/:radius" => points_handler,
         editor: get "/editor" => editor,
         save_post: post "/post" => post_create,
         login: get "/login" => login,
