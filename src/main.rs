@@ -22,12 +22,13 @@ use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::Read;
 
 use iron::prelude::*;
+use iron::typemap::Key;
+use iron::middleware::*;
 use iron::status;
 use iron::modifiers::Redirect;
-
-use std::io::Read;
 use iron_sessionstorage::traits::*;
 use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
@@ -55,6 +56,8 @@ mod ftp;
 mod gpx;
 mod quadtree;
 
+use quadtree::QuadTree;
+use gpx::GPXPoint;
 struct Login {
     username: String
 }
@@ -227,19 +230,25 @@ fn the_map(req: &mut Request) -> IronResult<Response> {
 fn points_handler(req: &mut Request) -> IronResult<Response> {
     let mut data = get_posts();
     let mut resp = Response::new();
-    let router = req.extensions.get::<Router>().unwrap();
-    let lat = router.find("lat").unwrap_or("0");
-    let lng = router.find("lng").unwrap_or("0");
-    let rad = router.find("radius").unwrap_or("0");
+    let mut lat = 0f64;
+    let mut lng = 0f64;
+    let mut rad = 0f64;
+    {
+        let router = req.extensions.get::<Router>().unwrap();
+        lat = router.find("lat").unwrap_or("0").parse().unwrap();
+        lng = router.find("lng").unwrap_or("0").parse().unwrap();
+        rad = router.find("radius").unwrap_or("0").parse().unwrap();
+    }
 
+    let tree_lock = req.get_tree();
+    let tree_read = tree_lock.read().unwrap();
+
+    let points = tree_read.get(lat, lng, rad);
     Ok(Response::with((
         status::Ok,
         "text/json".parse::<iron::mime::Mime>().unwrap(),
-        format!("{}", lat)
+        format!("{{points: {:?}}}", points)
         )))
-
-    //resp.set_mut(Template::new("the_map", data)).set_mut(status::Ok);
-    //Ok(resp)
 }
 
 fn post_handler(req: &mut Request) -> IronResult<Response> {
@@ -263,20 +272,45 @@ fn post_create(req: &mut Request) -> IronResult<Response> {
         "{\"status\": \"ok\"}")))
 }
 
+#[derive(Clone)]
+struct TreeWare {
+    tree: Arc<RwLock<QuadTree<GPXPoint>>>
+}
+impl Key for TreeWare {
+    type Value = Arc<RwLock<QuadTree<GPXPoint>>>;
+}
+
+impl BeforeMiddleware for TreeWare {
+    fn before(&self, req: &mut Request) -> IronResult<()> {
+        req.extensions.insert::<TreeWare>(self.tree.clone());
+        Ok(())
+    }
+}
+
+pub trait TreeWareExt {
+    fn get_tree(&mut self) -> &mut Arc<RwLock<QuadTree<GPXPoint>>>;
+}
+
+impl<'a, 'b> TreeWareExt for Request<'a, 'b> {
+    fn get_tree(&mut self) -> &mut Arc<RwLock<QuadTree<GPXPoint>>> {
+        self.extensions.get_mut::<TreeWare>().unwrap()
+    }
+}
+
 fn main() {
 
-    let mut tree_lock = RwLock::new(quadtree::QuadTree::load(String::from("tree.json")));
-//    let map_tree = Quadtree::load("tree.json");
+    let tree_lock = Arc::new(RwLock::new(quadtree::QuadTree::load(String::from("tree.json"))));
 
     let (tx, rx) = channel();
     thread::spawn(move || {
         ftp::start_ftpserver(tx)
     });
+    let tree2 = tree_lock.clone();
     thread::spawn(move || {
         loop {
             let gps_file = rx.recv().unwrap();
             for point in gpx::parse(gps_file) {
-                let mut map_tree = tree_lock.write().unwrap();
+                let mut map_tree = tree2.write().unwrap();
                 map_tree.insert(point);
             }
         }
@@ -296,6 +330,7 @@ fn main() {
 
     let my_secret = include_bytes!("../resources/passwords.json").to_vec();
     let mut ch = Chain::new(router);
+    ch.link_before(TreeWare {tree: tree_lock.clone() });
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("./resources/templates/", ".hbs")));
