@@ -3,6 +3,7 @@ use chrono::*;
 use xml::reader::{EventReader, XmlEvent};
 use std::fs::File;
 use std::io::BufReader;
+use std::cmp::Ordering;
 
 fn indent(size: usize) -> String {
 	const INDENT: &'static str = "    ";
@@ -19,6 +20,28 @@ pub struct GPXPoint {
 	pub time: Option<DateTime<FixedOffset>>
 }
 
+impl Eq for GPXPoint {}
+
+impl PartialEq for GPXPoint {
+    fn eq(&self, other: &GPXPoint) -> bool {
+        self.time == other.time
+    }
+}
+
+impl Ord for GPXPoint {
+    fn cmp(&self, other: &GPXPoint) -> Ordering {
+        self.time.cmp(&other.time)
+    }
+}
+
+
+impl PartialOrd for GPXPoint {
+    fn partial_cmp(&self, other: &GPXPoint) -> Option<Ordering> {
+        Some(self.time.cmp(&other.time))
+    }
+}
+
+
 pub fn parse(file_path: String) -> Vec<GPXPoint> {
 	let file = File::open(file_path).unwrap();
 	let file = BufReader::new(file);
@@ -31,24 +54,19 @@ pub fn parse(file_path: String) -> Vec<GPXPoint> {
 	for e in parser {
 		match e {
 			Ok(XmlEvent::StartElement { name, attributes, .. }) => {
-//				println!("{} START {}", indent(depth), name);
 				curname = name.local_name;
 				if curname.contains("trkpt") {
-//					println!("trkpt found");
 					let mut pt = GPXPoint { lat: 0.0f64, lon: 0.0f64, elev: None, time: None };
 					for attr in attributes {
-//						println!("{} ATTR: {} = {}", indent(depth + 1), attr.name, attr.value);
 						match attr.name.local_name.as_ref() {
 							"lat" => {
 								pt.lat = attr.value.parse().unwrap();
-//								println!("lat: {}", pt.lat);
 							}
 							"lon" => {
 								pt.lon = attr.value.parse().unwrap();
-//								println!("lon: {}", pt.lon);
 							}
 							_ => {
-//								println!("warn: unknown attr {}", attr.name);
+								println!("warn: unknown attr {}", attr.name);
 							}
 						}
 					}
@@ -61,33 +79,26 @@ pub fn parse(file_path: String) -> Vec<GPXPoint> {
 				if name.local_name.contains("trkpt") {
 					match elem {
 						Some(pt) => {
-//							println!("pushing trkpt: {}, {}, {:?}, {:?}", pt.lat, pt.lon, pt.elev, pt.time);
 							points.push(pt);
 						},
 						None => {}
 					}
 					elem = None;
 				}
-//				println!("{}-{}", indent(depth), name);
 			}
 			Ok(XmlEvent::CData(string)) => {
-//				println!("{} CDATA: {}", indent(depth), string);
 			}
 			Ok(XmlEvent::Characters(string)) => {
-//				println!("{} {} CHARS: {}", indent(depth), curname, string);
 				match elem {
 					Some(ref mut pt) => {
 						match curname.as_ref() {
 							"ele" => {
-//								println!("ele: {}", string);
 								pt.elev = Some(string.parse().unwrap());
 							},
 							"time" => {
-//								println!("time: {}", string);
 								let result = DateTime::parse_from_rfc3339(&string);
 								match result {
 									Ok(time) => {
-//										println!("time parsed\n");
 										pt.time = Some(time);
 									}
 									Err(e) => {
