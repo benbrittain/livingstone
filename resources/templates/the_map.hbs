@@ -1,5 +1,5 @@
 {{> header }}
-    <div class="container is-fluid">
+    <div class="container is-fluid is-unselectable">
       <section class="hero is-success is-fullheight">
         <div id="mapid" class="hero-body"> </div>
       </section>
@@ -17,7 +17,16 @@
       function reqListener () {
         layerGroup.clearLayers();
         var geojsonFeature = JSON.parse(this.responseText);
-        L.geoJSON(geojsonFeature).addTo(layerGroup);
+        L.geoJSON(geojsonFeature, {
+            style: function(feature) {
+              console.log(feature);
+              return {
+                color: feature.properties.color,
+                opacity: 0.92,
+                weight: 6,
+              };
+            }
+        }).addTo(layerGroup);
       }
       function eventHandler(e) {
         var center = mymap.getCenter();
@@ -25,7 +34,6 @@
         var Httpreq = new XMLHttpRequest();
         var oReq = new XMLHttpRequest();
         oReq.addEventListener("load", reqListener);
-        //console.log(center, center.distanceTo(bounds._northEast) / 111000);
         oReq.open("GET", "/points/" + center.lat + "/" + center.lng + "/" + center.distanceTo(bounds._northEast))
         oReq.send();
       }

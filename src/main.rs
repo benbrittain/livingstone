@@ -250,11 +250,7 @@ fn points_handler(req: &mut Request) -> IronResult<Response> {
     let radians = rad / 110000.0;
     let mut points = tree_read.get(lng, lat, radians);
     points.sort();
-
-    println!("{},{}", lat, lng);
-    println!("{},{}", lat_to_y(lat), lng_to_x(lng));
     let point_resp = geo::jsonify(points);
-
     Ok(Response::with((
         status::Ok,
         "text/json".parse::<iron::mime::Mime>().unwrap(),
