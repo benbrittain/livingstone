@@ -37,7 +37,8 @@
             id: 'mapbox.satellite',
         }).addTo(map{{@index}});
         map{{@index}}.attributionControl = false;
-map{{@index}}.doubleClickZoom.disable();
+        map{{@index}}.doubleClickZoom.disable();
+        map{{@index}}.scrollWheelZoom.disable();
             </script>
     {{/each}}
 
