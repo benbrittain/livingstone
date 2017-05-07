@@ -150,7 +150,7 @@ fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
                                                         if m == 0 && started {
                                                             // Some time to flush. shitty, but functional
                                                             let _ = fout.flush();
-                                                            thread::sleep(Duration::new(0, 10000));
+                                                            thread::sleep(Duration::new(0, 30000));
                                                             let _ = f_tx.send((true));
                                                         } else {
                                                             started = true;
