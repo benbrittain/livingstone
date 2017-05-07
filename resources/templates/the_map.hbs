@@ -11,11 +11,13 @@
                 attribution: "",
                 id: 'mapbox.satellite',
       }).addTo(mymap);
+      var layerGroup = L.layerGroup().addTo(mymap);
+
       mymap.on('dragend zoomend', eventHandler);
       function reqListener () {
+        layerGroup.clearLayers();
         var geojsonFeature = JSON.parse(this.responseText);
-        console.log(this.responseText);
-        L.geoJSON(geojsonFeature).addTo(mymap);
+        L.geoJSON(geojsonFeature).addTo(layerGroup);
       }
       function eventHandler(e) {
         var center = mymap.getCenter();
