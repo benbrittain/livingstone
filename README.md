@@ -7,7 +7,7 @@ Live at: https://travel.benbrittain.com
 
 TODO
 -----
-* make GPS datastore
+* fix gpx ftp upload for full file
 * autogenerate link name
 * customize style
 * MD -> html
