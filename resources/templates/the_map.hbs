@@ -29,5 +29,18 @@
         oReq.open("GET", "/points/" + center.lat + "/" + center.lng + "/" + center.distanceTo(bounds._northEast))
         oReq.send();
       }
+      {{#each posts}}
+        var m{{@index}} = new L.marker([{{lat}}, {{lng}}], {
+          riseOnHover: true,
+        });
+        m{{@index}}.addTo(mymap).bindTooltip('{{title}}', {
+          direction: 'top',
+          className: 'tag is-primary is-medium',
+        });
+        m{{@index}}.on('click', monClick{{@index}});
+        function monClick{{@index}}(e) {
+          window.open('/post/{{link}}');
+        }
+      {{/each}}
     </script>
 {{> footer}}
