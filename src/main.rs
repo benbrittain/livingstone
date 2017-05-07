@@ -322,17 +322,21 @@ fn main() {
                 let mut map_tree = tree2.write().unwrap();
                 map_tree.insert(point);
             }
+            // loop was going crazy, calm it down
+            thread::sleep_ms(10000);
         }
     });
     let tree2 = tree_lock.clone();
-    for point in gpx::parse(String::from("20170426.gpx")) {
-        let mut map_tree = tree2.write().unwrap();
-        map_tree.insert(point);
+    for entry in fs::read_dir("./gpx/").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        for point in gpx::parse(path.to_str().unwrap().to_string()) {
+            let mut map_tree = tree2.write().unwrap();
+            map_tree.insert(point);
+        }
     }
 
     let x = tree2.read().unwrap();
-    println!("{:?}", x.get(-73.0, 40.0, 1.0));
-
 
     let router = router!{
         home: get "/" => home,

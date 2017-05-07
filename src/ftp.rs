@@ -15,6 +15,8 @@ use std::fs::OpenOptions;
 use std::time::Duration;
 use std::sync::RwLock;
 
+const WORKING_DIR: &'static str = "gpx/";
+
 fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
 	match stream.write(b"220 Welcome!\r\n") {
 		Err(e) => panic!("Got an error: {}", e),
@@ -86,11 +88,11 @@ fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
 
                 let arg_str = format!("{}", args).replace("\r", "\n");
                 let arg_line = arg_str.lines().next();
-                let out = arg_line.unwrap().trim();
+                let out = WORKING_DIR.to_owned() + arg_line.unwrap().trim();
                 let fout = match OpenOptions::new()
                     .create(true)
                     .write(true)
-                    .open(out) {
+                    .open(out.as_str()) {
                         Ok(f)  => Some(Box::new(BufWriter::new(f))),
                         Err(_) => None
                     };
