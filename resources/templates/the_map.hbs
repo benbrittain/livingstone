@@ -5,7 +5,7 @@
       </section>
     </div>
     <script>
-      var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+      var mymap = L.map('mapid').setView([-1.23, 22.39], 4);
       L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiYmJyaXR0YWluIiwiYSI6ImNqMXR1ZjN4YjAwMXUzM3AweWRsb2pwOHMifQ.3LYbdpsBdUUzjw_7e_rWvQ', {
                 maxZoom: 13,
                 attribution: "",
@@ -23,7 +23,7 @@
         var Httpreq = new XMLHttpRequest();
         var oReq = new XMLHttpRequest();
         oReq.addEventListener("load", reqListener);
-        console.log(center, center.distanceTo(bounds._northEast) / 111000);
+        //console.log(center, center.distanceTo(bounds._northEast) / 111000);
         oReq.open("GET", "/points/" + center.lat + "/" + center.lng + "/" + center.distanceTo(bounds._northEast))
         oReq.send();
       }
