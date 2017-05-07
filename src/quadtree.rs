@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use gpx::GPXPoint;
 use geo::*;
+use chrono;
 
 const CAPACITY: usize = 5;
 
@@ -17,6 +18,7 @@ pub struct QuadTree<T> {
 pub trait Geospatial {
     fn x(&self) -> f64;
     fn y(&self) -> f64;
+    fn date(&self) -> chrono::DateTime<chrono::FixedOffset>;
 }
 
 impl Geospatial for GPXPoint {
@@ -25,6 +27,9 @@ impl Geospatial for GPXPoint {
     }
     fn y(&self) -> f64 {
         self.lat
+    }
+    fn date(&self) -> chrono::DateTime<chrono::FixedOffset> {
+        self.time.unwrap()
     }
 }
 

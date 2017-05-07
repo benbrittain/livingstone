@@ -8,7 +8,6 @@ static MAXEXTENT: f64 = 20037508.342789244;
 static D2R: f64 = f64::consts::PI / 180.0;
 static R2D: f64 = 180.0 / f64::consts::PI;
 
-
 pub fn lat_to_y(lat: f64) -> f64 {
     ((f64::consts::PI * 0.5) - 2.0 * ((-lat / A).exp()).atan()) * R2D
 }
@@ -41,22 +40,91 @@ pub fn simplify<T>(points: Vec<T>) -> Vec<T> {
     points
 }
 
+#[derive(Serialize)]
+struct LineString {
+    #[serde(rename="type")]
+    _type: String,
+    coordinates: Vec<(f64, f64)>
+}
+
+#[derive(Serialize)]
+struct Properties {
+    date: String,
+    color: String,
+}
+
+#[derive(Serialize)]
+struct Feature {
+    #[serde(rename="type")]
+    _type: String,
+    geometry: LineString, //TODO replace with enum of geojson types
+    properties: Properties,
+}
+
+#[derive(Serialize)]
+struct FeatureCollection {
+    #[serde(rename="type")]
+    _type: String,
+    features: Vec<Feature>,
+}
+
 pub fn jsonify<T>(points: Vec<T>) -> String
-    where T: Geospatial {
+    where T: Geospatial + Ord {
+    // points are already sorted by date
+
+    let colors = [
+        "#5E412F",
+        "#FCEBB6",
+        "#78C0A8",
+        "#F07818",
+        "#F0A830"];
 
     let mut simple_points: Vec<(f64, f64)> = Vec::new();
-    for point in points {
-        simple_points.push((point.x(), point.y()))
-    }
-    simple_points = simplify(simple_points);
+    let mut different_days: Vec<Feature> = Vec::new();
 
-	format!("
-	{{
-		\"type\": \"Feature\",
-		\"geometry\": {{
-			\"type\": \"LineString\",
-			\"coordinates\": {}
-		}},
-		\"properties\": {{}}
-	}}", serde_json::to_string(&simple_points).unwrap())
+    let mut last_day = None;
+    let mut last_day_points: Vec<(f64, f64)> = Vec::new();
+    let mut idx = 0;
+
+    for point in points.iter() {
+        if last_day.is_none() {
+            last_day = Some(point.date().date())
+        }
+        if last_day != Some(point.date().date()) {
+            different_days.push(Feature {
+                _type: String::from("Feature"),
+                geometry: LineString {
+                    _type: String::from("LineString"),
+                    coordinates: last_day_points.clone()
+                },
+                properties: Properties{
+                    date: point.date().date().to_string(),
+                    color: String::from(colors[idx%5]),
+                },
+            });
+            idx +=1;
+            last_day = Some(point.date().date());
+            last_day_points = Vec::new();
+        }
+        last_day_points.push((point.x(), point.y()))
+    }
+    different_days.push(Feature {
+        _type: String::from("Feature"),
+        geometry: LineString {
+            _type: String::from("LineString"),
+            coordinates: last_day_points.clone(),
+        },
+        properties: Properties{
+            date: last_day.unwrap().to_string(),
+            color: String::from(colors[idx%5]),
+        },
+    });
+//    simple_points = simplify(simple_points);
+
+    let fc = FeatureCollection {
+        _type: String::from("FeatureCollection"),
+        features: different_days,
+    };
+
+    serde_json::to_string(&fc).unwrap()
 }

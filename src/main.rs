@@ -247,8 +247,9 @@ fn points_handler(req: &mut Request) -> IronResult<Response> {
     let tree_read = tree_lock.read().unwrap();
 
     //TODO better geo system
-    let radians = rad / 111000.0;
-    let points = tree_read.get(lng, lat, radians);
+    let radians = rad / 110000.0;
+    let mut points = tree_read.get(lng, lat, radians);
+    points.sort();
 
     println!("{},{}", lat, lng);
     println!("{},{}", lat_to_y(lat), lng_to_x(lng));
