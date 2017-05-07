@@ -11,6 +11,21 @@
                 attribution: "",
                 id: 'mapbox.satellite',
       }).addTo(mymap);
-      mymap.attributionControl = true;
+      mymap.on('dragend zoomend', eventHandler);
+      function reqListener () {
+        var geojsonFeature = JSON.parse(this.responseText);
+        console.log(this.responseText);
+        L.geoJSON(geojsonFeature).addTo(mymap);
+      }
+      function eventHandler(e) {
+        var center = mymap.getCenter();
+        var bounds = mymap.getBounds();
+        var Httpreq = new XMLHttpRequest();
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", reqListener);
+        console.log(center, center.distanceTo(bounds._northEast) / 111000);
+        oReq.open("GET", "/points/" + center.lat + "/" + center.lng + "/" + center.distanceTo(bounds._northEast))
+        oReq.send();
+      }
     </script>
 {{> footer}}

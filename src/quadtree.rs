@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 use gpx::GPXPoint;
+use geo::*;
 
-const CAPACITY: usize = 10;
+const CAPACITY: usize = 5;
 
 #[derive(Debug)]
 pub struct QuadTree<T> {
@@ -13,18 +14,17 @@ pub struct QuadTree<T> {
     size: f64,
 }
 
-trait Geospatial {
+pub trait Geospatial {
     fn x(&self) -> f64;
     fn y(&self) -> f64;
 }
 
 impl Geospatial for GPXPoint {
     fn x(&self) -> f64 {
-        42.0
-        //self.lon
+        self.lon
     }
     fn y(&self) -> f64 {
-        42.0 //self.lat
+        self.lat
     }
 }
 
@@ -41,7 +41,7 @@ impl<T> QuadTree<T> where T: Debug + Geospatial + Copy {
         }
     }
 
-    pub fn load(string: String) -> QuadTree<T> {
+    pub fn root() -> QuadTree<T> {
         QuadTree {
             elements: Vec::new(),
             depth: 0,
@@ -77,12 +77,13 @@ impl<T> QuadTree<T> where T: Debug + Geospatial + Copy {
     pub fn get(&self, x: f64, y: f64, rad: f64) -> Vec<T> {
         let mut accum = Vec::new();
         let hs = (self.size / 2.0);
-        if (x < self.x + hs)  && (y < self.y + hs)  &&
-           (x >= self.x - hs) && (y >= self.y - hs) {
+        if ((x + rad > self.x - hs) || (y + rad > self.y - hs) ||
+            (y - rad < self.y + hs) || (x - rad < self.x + hs)) {
             for elem in self.elements.iter() {
-                if x + rad > elem.x() && x - rad < elem.x() &&
-                    y + rad > elem.y() && y - rad < elem.y() {
-                        accum.push(elem.clone())
+                if (elem.x() > x - rad && elem.x() < x + rad &&
+                    elem.y() > y - rad && elem.y() < y + rad)
+                {
+                    accum.push(elem.clone())
                 }
             }
             match self.children {

@@ -55,9 +55,12 @@ use std::thread;
 mod ftp;
 mod gpx;
 mod quadtree;
+mod geo;
 
 use quadtree::QuadTree;
+use geo::*;
 use gpx::GPXPoint;
+
 struct Login {
     username: String
 }
@@ -243,12 +246,18 @@ fn points_handler(req: &mut Request) -> IronResult<Response> {
     let tree_lock = req.get_tree();
     let tree_read = tree_lock.read().unwrap();
 
-    let points = tree_read.get(lat, lng, rad);
+    //TODO better geo system
+    let radians = rad / 111000.0;
+    let points = tree_read.get(lng, lat, radians);
+
+    println!("{},{}", lat, lng);
+    println!("{},{}", lat_to_y(lat), lng_to_x(lng));
+    let point_resp = geo::jsonify(points);
+
     Ok(Response::with((
         status::Ok,
         "text/json".parse::<iron::mime::Mime>().unwrap(),
-        format!("{{points: {:?}}}", points)
-        )))
+        point_resp)))
 }
 
 fn post_handler(req: &mut Request) -> IronResult<Response> {
@@ -299,7 +308,7 @@ impl<'a, 'b> TreeWareExt for Request<'a, 'b> {
 
 fn main() {
 
-    let tree_lock = Arc::new(RwLock::new(quadtree::QuadTree::load(String::from("tree.json"))));
+    let tree_lock = Arc::new(RwLock::new(quadtree::QuadTree::root()));
 
     let (tx, rx) = channel();
     thread::spawn(move || {
@@ -315,6 +324,15 @@ fn main() {
             }
         }
     });
+    let tree2 = tree_lock.clone();
+    for point in gpx::parse(String::from("20170426.gpx")) {
+        let mut map_tree = tree2.write().unwrap();
+        map_tree.insert(point);
+    }
+
+    let x = tree2.read().unwrap();
+    println!("{:?}", x.get(-73.0, 40.0, 1.0));
+
 
     let router = router!{
         home: get "/" => home,
