@@ -14,8 +14,8 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
-#[macro_use]
-extern crate maplit;
+
+extern crate comrak;
 
 use std::cmp::Ordering;
 use std::fs;
@@ -45,7 +45,9 @@ use hbs::Watchable;
 
 use serde_json::value::{Value, Map};
 use serde_json::Error;
+
 use chrono::prelude::*;
+use comrak::{markdown_to_html, ComrakOptions};
 
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -112,7 +114,8 @@ fn get_post(id: &str) -> Value {
     let mut buf_reader = BufReader::new(file.unwrap());
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents).unwrap();
-    let p: Post = serde_json::from_str(contents.as_str()).unwrap();
+    let mut p: Post = serde_json::from_str(contents.as_str()).unwrap();
+    p.text = markdown_to_html(p.text.as_str(),  &ComrakOptions::default());
     to_json(&p)
 }
 

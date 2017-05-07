@@ -11,8 +11,8 @@ urlencoded = "*"
 serde_json = "0.9.10"
 serde_derive = "0.9.14"
 serde = "0.9.14"
-maplit = "*"
 xml-rs = "*"
+comrak = "*"
 chrono = { version = "0.3", features = ["serde"] }
 
 [dependencies.handlebars-iron]
