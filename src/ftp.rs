@@ -17,7 +17,7 @@ use std::sync::RwLock;
 
 const WORKING_DIR: &'static str = "gpx/";
 
-fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
+fn handle_client(hostname: String, mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
 	match stream.write(b"220 Welcome!\r\n") {
 		Err(e) => panic!("Got an error: {}", e),
 		Ok(_) => {
@@ -116,7 +116,7 @@ fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
                 let _ = stream.write(b"250 OK.\r\n");
             }
             "PASV" => {
-                passive_listener = Some(TcpListener::bind("192.168.10.102:0").unwrap());
+                passive_listener = Some(TcpListener::bind((hostname.as_str(), 0)).unwrap());
                 let passive_list = passive_listener.unwrap();
                 let addr = passive_list.local_addr().unwrap();
                 let ip_str = format!("{}", addr.ip());
@@ -150,7 +150,7 @@ fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
                                                         if m == 0 && started {
                                                             // Some time to flush. shitty, but functional
                                                             let _ = fout.flush();
-                                                            thread::sleep(Duration::new(0, 30000));
+                                                            thread::sleep(Duration::new(0, 50000));
                                                             let _ = f_tx.send((true));
                                                         } else {
                                                             started = true;
@@ -190,15 +190,16 @@ fn handle_client(mut stream: TcpStream, cord_sender: mpsc::Sender<String>) {
     }
 }
 
-pub fn start_ftpserver(tx: mpsc::Sender<String>) {
+pub fn start_ftpserver(hostname: String, tx: mpsc::Sender<String>) {
 	let listener = TcpListener::bind("0.0.0.0:2121").unwrap();
     println!("listening for GPS coords on 2121");
 	for stream in listener.incoming() {
         let txprime = tx.clone();
         match stream {
 	        Ok(stream) => {
-	            thread::spawn(move|| {
-	                handle_client(stream, txprime)
+                let x = hostname.clone();
+                thread::spawn(move|| {
+	                handle_client(x, stream, txprime)
 	            });
 	        }
 	        Err(_) => { /* connection failed */ }

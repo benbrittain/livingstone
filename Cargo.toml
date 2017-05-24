@@ -4,9 +4,12 @@ version = "0.1.0"
 authors = ["Ben Brittain <ben@brittain.org>"]
 
 [dependencies]
+rand = "*"
 router = "*"
 iron = "*"
 iron-sessionstorage = "*"
+staticfile = "*"
+mount = "*"
 urlencoded = "*"
 serde_json = "0.9.10"
 serde_derive = "0.9.14"

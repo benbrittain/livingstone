@@ -1,5 +1,6 @@
 #![cfg_attr(all(feature="serde_type"), feature(proc_macro))]
 
+extern crate rand;
 extern crate xml;
 extern crate chrono;
 #[macro_use]
@@ -7,6 +8,8 @@ extern crate iron;
 #[macro_use]
 extern crate router;
 extern crate iron_sessionstorage;
+extern crate mount;
+extern crate staticfile;
 extern crate urlencoded;
 extern crate handlebars_iron as hbs;
 #[macro_use]
@@ -23,6 +26,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::io::Read;
+use std::path::Path;
 
 use iron::prelude::*;
 use iron::typemap::Key;
@@ -36,6 +40,8 @@ use iron_sessionstorage::backends::SignedCookieBackend;
 use urlencoded::UrlEncodedBody;
 
 use router::Router;
+use mount::Mount;
+use staticfile::Static;
 
 use hbs::{Template, HandlebarsEngine, DirectorySource, MemorySource};
 use hbs::handlebars::{Handlebars, RenderContext, RenderError, Helper};
@@ -115,6 +121,13 @@ fn get_post(id: &str) -> Value {
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents).unwrap();
     let mut p: Post = serde_json::from_str(contents.as_str()).unwrap();
+    let mut options = ComrakOptions::default();
+    options.ext_strikethrough = true;
+    options.github_pre_lang = true;
+    options.hardbreaks = true;
+    options.ext_strikethrough = true;
+    options.ext_autolink = true;
+    options.ext_tasklist = true;
     p.text = markdown_to_html(p.text.as_str(),  &ComrakOptions::default());
     to_json(&p)
 }
@@ -312,7 +325,7 @@ fn main() {
 
     let (tx, rx) = channel();
     thread::spawn(move || {
-        ftp::start_ftpserver(tx)
+        ftp::start_ftpserver(String::from("192.168.10.102"), tx)
     });
     let tree2 = tree_lock.clone();
     thread::spawn(move || {
@@ -351,7 +364,12 @@ fn main() {
     };
 
     let my_secret = include_bytes!("../resources/passwords.json").to_vec();
-    let mut ch = Chain::new(router);
+
+    let mut mount = Mount::new();
+    mount.mount("/", router)
+         .mount("/css/", Static::new(Path::new("resources/css/")));
+    let mut ch = Chain::new(mount);
+
     ch.link_before(TreeWare {tree: tree_lock.clone() });
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let mut hbse = HandlebarsEngine::new();
