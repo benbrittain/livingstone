@@ -1,5 +1,4 @@
 #![cfg_attr(all(feature="serde_type"), feature(proc_macro))]
-
 extern crate rand;
 extern crate xml;
 extern crate chrono;
@@ -90,6 +89,8 @@ pub struct Post {
     title: String,
     link: String,
     text: String,
+    #[serde(default)]
+    snippet: String,
     tags: Vec<String>,
     date: DateTime<UTC>,
     lat: f32,
@@ -129,8 +130,18 @@ fn get_post(id: &str) -> Value {
     options.ext_autolink = true;
     options.ext_tasklist = true;
     p.text = markdown_to_html(p.text.as_str(),  &ComrakOptions::default());
+    p.snippet = make_snippet(&p.text);
     to_json(&p)
 }
+
+fn make_snippet(text: &String) -> String {
+    text.split_whitespace() // Turn the text into a snippet of less than 80 words
+        .map(|s| s.to_string())
+        .take(80)
+        .collect::<Vec<String>>()
+        .join(" ")
+}
+
 
 fn get_posts() -> Map<String, Value> {
     let mut data = Map::new();
@@ -142,11 +153,7 @@ fn get_posts() -> Map<String, Value> {
         let mut contents = String::new();
         buf_reader.read_to_string(&mut contents).unwrap();
         let mut p: Post = serde_json::from_str(contents.as_str()).unwrap();
-        p.text = p.text.split_whitespace() // Turn the text into a snippet of less than 80 words
-                       .map(|s| s.to_string())
-                       .take(80)
-                       .collect::<Vec<String>>()
-                       .join(" ");
+        p.snippet = make_snippet(&p.text);
         posts.push(p);
     }
     posts.sort();
@@ -367,6 +374,7 @@ fn main() {
 
     let mut mount = Mount::new();
     mount.mount("/", router)
+         .mount("/images/", Static::new(Path::new("resources/images/")))
          .mount("/css/", Static::new(Path::new("resources/css/")));
     let mut ch = Chain::new(mount);
 

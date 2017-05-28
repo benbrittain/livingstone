@@ -3,12 +3,23 @@
   <head>
     <title>Africa</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.0/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/travel.css">
     <!--     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script> -->
-     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-     <script src='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.js'></script>
-     <link href='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.css' rel='stylesheet' />
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    {{#if link}}
+      <meta property="og:url" content="https://travel.benbrittain.com/post/{{link}}" />
+      <meta property="og:type" content="article" />
+      <meta property="og:title" content="{{title}}" />
+      <meta property="og:description" content="{{snippet}}" />
+    {{else}}
+      <meta property="og:url" content="https://travel.benbrittain.com/" />
+      <meta property="og:title" content="Yet another of Ben's misadventures" /> <!-- a better title?  -->
+      <meta property="og:description" content='"Tourist, Rincewind decided, meant idiot.\" -- Terry Pratchet' />
+    {{/if}}
+    <meta property="og:image" content="https://travel.benbrittain.com/images/cover_default.jpg" />
+    <script src='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v3.1.0/mapbox.css' rel='stylesheet' />
   </head>
   <body>
     <script>
@@ -26,18 +37,18 @@
                 </a>
               </div>
               <div class="nav-right">
-                <a href="/" class="nav-item">
+                <a href="/" class="nav-item is-tab">
                   Home
                 </a>
                 {{#if loggedin}}
-                  <a href="/editor" class="nav-item">
+                  <a href="/editor" class="nav-item is-tab">
                     Make Post
                   </a>
                 {{/if}}
-                <a href="/the-map" class="nav-item">
+                <a href="/the-map" class="nav-item is-tab">
                   The Map
                 </a>
-                <a href="http://benbrittain.com" class="nav-item">
+                <a href="http://benbrittain.com" class="nav-item is-tab">
                   About
                 </a>
               </div>
