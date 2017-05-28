@@ -16,7 +16,10 @@ serde_derive = "0.9.14"
 serde = "0.9.14"
 xml-rs = "0.4.1"
 comrak = "0.1.4"
-chrono = { version = "0.3", features = ["serde"] }
+
+[dependencies.chrono]
+version = "0.3.0"
+features = ["serde"]
 
 [dependencies.handlebars-iron]
 version = "0.23.1"
