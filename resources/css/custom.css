@@ -15,3 +15,7 @@ footer {
     height: 80px;
     width: 100%;
 }
+
+.hero {
+  background-color: whitesmoke;
+}
