@@ -19,3 +19,14 @@ footer {
 .hero {
   background-color: whitesmoke;
 }
+
+p {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-font-smoothing: antialiased !important;
+  text-rendering: optimizelegibility !important;
+}
+
+.column p {
+  text-indent: 2em;
+}
