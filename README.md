@@ -3,6 +3,7 @@
 ``` “Tourist, Rincewind decided, meant 'idiot'.” -- Terry Pratchet```
 
 Live at: https://travel.benbrittain.com
+
 Written in Rust for my overland motorcycle Africa trip.
 
 Supports GPX uploads via FTP to be displayed on the map. 
