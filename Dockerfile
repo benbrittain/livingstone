@@ -11,4 +11,7 @@ RUN apk add git \
 
 RUN git clone https://github.com/cavedweller/livingstone.git
 WORKDIR livingstone
+COPY prod-passwords.json resources/passwords.json
 RUN cargo build --release
+RUN mkdir gpx/
+CMD cargo run --release
