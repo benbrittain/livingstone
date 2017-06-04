@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+<title> Ben Brittain Travels </title>
+<link>https://travel.benbrittain.com</link>
+<description> Ben Travels Across Africa </description>
+{{#each posts}}
+  <item>
+     <title>{{title}}</title>
+     <link>https://travel.benbrittain.com/post/{{link}}</link>
+     <description>{{snippet}}</description>
+  </item>
+{{/each}}
+</channel>
+</rss>

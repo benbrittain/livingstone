@@ -243,6 +243,16 @@ fn home(req: &mut Request) -> IronResult<Response> {
     Ok(resp)
 }
 
+fn feed(req: &mut Request) -> IronResult<Response> {
+    let mut data = get_posts();
+    let mut resp = Response::new();
+    if try!(req.session().get::<Login>()).is_some() {
+        data.insert(String::from("loggedin"), to_json(&true));
+    }
+    resp.set_mut(Template::new("rss", data)).set_mut(status::Ok);
+    Ok(resp)
+}
+
 fn the_map(req: &mut Request) -> IronResult<Response> {
     let mut data = get_posts();
     let mut resp = Response::new();
@@ -332,7 +342,7 @@ fn main() {
 
     let (tx, rx) = channel();
     thread::spawn(move || {
-        ftp::start_ftpserver(String::from("192.168.10.102"), tx)
+        ftp::start_ftpserver(String::from("travel.benbrittain.com"), tx)
     });
     let tree2 = tree_lock.clone();
     thread::spawn(move || {
@@ -360,6 +370,7 @@ fn main() {
 
     let router = router!{
         home: get "/" => home,
+        feed: get "/feed" => feed,
         post: get "/post/:post_id" => post_handler,
         map: get "/the-map" => the_map,
         points: get "/points/:lat/:lng/:radius" => points_handler,
