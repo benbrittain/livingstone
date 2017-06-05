@@ -15,4 +15,6 @@ COPY prod-passwords.json resources/passwords.json
 RUN cargo build --release
 RUN mkdir gpx/
 EXPOSE 8080 2121
+VOLUME /resources/posts/
+VOLUME /gpx
 CMD cargo run --release
