@@ -119,14 +119,15 @@ fn handle_client(hostname: String, mut stream: TcpStream, cord_sender: mpsc::Sen
             "PASV" => {
                 let mut rng = thread_rng();
                 let n: u16 = rng.gen_range(59040, 59050);
-                passive_listener = Some(TcpListener::bind((hostname.as_str(), n)).unwrap());
+                passive_listener = Some(TcpListener::bind(("localhost", n)).unwrap());
                 let passive_list = passive_listener.unwrap();
                 let addr = passive_list.local_addr().unwrap();
-                let ip_str = format!("{}", addr.ip());
+                let ip_str = format!("{}", hostname);
                 let port = addr.port();
                 let out_str = format!("227 Entering Passive Mode ({},{},{}).\r\n",
                                             ip_str.replace(".", ","),
                                             port>>8&0xFF, port&0xFF);
+                println!("{}", out_str);
                 let _ = stream.write(out_str.as_bytes());
 
                 let child_queue = queue.clone();
