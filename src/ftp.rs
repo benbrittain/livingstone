@@ -119,7 +119,7 @@ fn handle_client(hostname: String, mut stream: TcpStream, cord_sender: mpsc::Sen
             "PASV" => {
                 let mut rng = thread_rng();
                 let n: u16 = rng.gen_range(59040, 59050);
-                passive_listener = Some(TcpListener::bind(("localhost", n)).unwrap());
+                passive_listener = Some(TcpListener::bind(("0.0.0.0", n)).unwrap());
                 let passive_list = passive_listener.unwrap();
                 let addr = passive_list.local_addr().unwrap();
                 let ip_str = format!("{}", hostname);
