@@ -14,6 +14,7 @@ use std::io::{Read, Write, BufWriter};
 use std::fs::OpenOptions;
 use std::time::Duration;
 use std::sync::RwLock;
+use rand::{thread_rng, Rng};
 
 const WORKING_DIR: &'static str = "gpx/";
 
@@ -116,7 +117,9 @@ fn handle_client(hostname: String, mut stream: TcpStream, cord_sender: mpsc::Sen
                 let _ = stream.write(b"250 OK.\r\n");
             }
             "PASV" => {
-                passive_listener = Some(TcpListener::bind((hostname.as_str(), 0)).unwrap());
+                let mut rng = thread_rng();
+                let n: u16 = rng.gen_range(59040, 59050);
+                passive_listener = Some(TcpListener::bind((hostname.as_str(), n)).unwrap());
                 let passive_list = passive_listener.unwrap();
                 let addr = passive_list.local_addr().unwrap();
                 let ip_str = format!("{}", addr.ip());
