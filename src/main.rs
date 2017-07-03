@@ -342,7 +342,7 @@ fn main() {
 
     let (tx, rx) = channel();
     thread::spawn(move || {
-        ftp::start_ftpserver(String::from("travel.benbrittain.com"), tx)
+        ftp::start_ftpserver(String::from("localhost"), tx)
     });
     let tree2 = tree_lock.clone();
     thread::spawn(move || {
